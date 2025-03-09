@@ -1,0 +1,26 @@
+# https://github.com/jOOQ/sakila
+# docker volume create sakila_volume
+
+name: jOOQ_sakila
+version: '3.8'
+services:
+  sakila-mysql:
+    image: mysql:8.0.35
+    container_name: sakila-mysql
+    platform: linux/amd64
+    volumes:
+      - sakila_volume:/var/lib/mysql
+    ports:
+      - '0:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: passwd
+      MYSQL_DATABASE: sakila
+    command: [
+      'mysqld',
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_unicode_ci',
+      '--lower_case_table_names=1'
+    ]
+volumes:
+  sakila_volume:
+    external: true

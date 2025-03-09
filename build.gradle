@@ -1,0 +1,113 @@
+buildscript {
+    ext {
+        jooqVersion = '3.19.5'
+    }
+}
+
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.3'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'nu.studer.jooq' version '9.0'
+}
+
+group = 'me.thinking_gorilla'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation ('org.springframework.boot:spring-boot-starter-jooq') {
+        exclude group: 'org.jooq:jooq'
+    }
+    implementation "org.jooq:jooq:${jooqVersion}"
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    jooqGenerator project(':jOOQ-custom')
+    jooqGenerator "org.jooq:jooq:${jooqVersion}"
+    jooqGenerator "org.jooq:jooq-meta:${jooqVersion}"
+}
+
+String dbUser = System.properties['db-user'] ?: 'root'
+String dbPasswd = System.properties['db-passwd'] ?: 'passwd'
+
+jooq {
+    version = "${jooqVersion}"
+    configurations {
+        sakilaDB {
+            generationTool {
+                jdbc {
+                    driver = 'com.mysql.cj.jdbc.Driver'
+                    url = 'jdbc:mysql://localhost:55000'
+                    user = "${dbUser}"
+                    password = "${dbPasswd}"
+                }
+                generator {
+                    name = 'org.jooq.codegen.DefaultGenerator'
+                    database {
+                        name = 'org.jooq.meta.mysql.MySQLDatabase'
+                        schemata {
+                            schema {
+                                inputSchema = 'sakila'
+                            }
+                        }
+                    }
+                    generate {
+                        // DSL 생성 시 일부 편의 기능이 완성된 Dao 자동생성
+                        daos = true
+                        // DB 테이블에 대응되는 ActiveRecord 자동생성
+                        records = true
+                        // DB 테이블에 대응되는 pojo 자동생성
+                        // pojos = true
+                        immutablePojos = true
+                        // pojo나 record 생성 시 return 값이 void 대신 객체 자체를 반환
+                        fluentSetters = true
+                        // java.sql.[Date|Time|Timestamp] 대신 java.time[LocalDate|LocalTime|LocalDateTime] 반환
+                        javaTimeTypes = true
+                        deprecated = false
+                        // jOOQ에서 제공하는 unsinged type 사용여부
+                        // unsingedTypes = true
+                        // 특정 데이터 타입을 DSL에서 강제로 다른 타입으로 지정 (e.g. INET, JSON → varchar)
+                        // forceTypes = true
+
+                        // jOOQ로 JPA 어노테이션이 붙은 모델을 생성함
+                        // jpaAnnotations = true
+                        // jpaVersion = 2.2
+
+                        //  javax.validation(JSR-380) 어노테이션이 붙은 모델을 생성함
+                        // validationAnnotations = true
+
+                        // Spring DATA Porject에 맞춰 모델을 생성함
+                        // springAnnotations = true
+                        // springDao = true
+                    }
+                    target {
+                        directory = 'src/generated'
+                    }
+
+                    // 왜 따로 서브모듈로 분리해야할까?
+                    strategy.name = 'jooq.custom.generator.JPrefixGeneratorStrategy'
+                }
+            }
+        }
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDirs = ['src/main/java', 'src/generated']
+            }
+        }
+    }
+}

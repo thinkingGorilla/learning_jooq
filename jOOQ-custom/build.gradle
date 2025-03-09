@@ -1,0 +1,15 @@
+plugins {
+    id 'java'
+}
+
+group = 'me.thinking_gorilla'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation "org.jooq:jooq-codegen:${jooqVersion}"
+    runtimeOnly 'com.mysql:mysql-connector-j'
+}
