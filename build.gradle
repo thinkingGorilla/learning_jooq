@@ -31,8 +31,16 @@ dependencies {
     }
     implementation "org.jooq:jooq:${jooqVersion}"
     runtimeOnly 'com.mysql:mysql-connector-j'
+
+    implementation 'org.springframework.data:spring-data-commons'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
 
     jooqGenerator project(':jOOQ-custom')
     jooqGenerator "org.jooq:jooq:${jooqVersion}"
@@ -57,9 +65,25 @@ jooq {
                     name = 'org.jooq.codegen.DefaultGenerator'
                     database {
                         name = 'org.jooq.meta.mysql.MySQLDatabase'
+                        // jOOQ에서 제공하는 unsinged type 사용여부
+                        unsignedTypes = true
                         schemata {
                             schema {
                                 inputSchema = 'sakila'
+                            }
+                        }
+                        forcedTypes {
+                            forcedType {
+                                includeTypes = 'int unsigned'
+                                userType = 'java.lang.Long'
+                            }
+                            forcedType {
+                                includeTypes = 'tinyint unsigned'
+                                userType = 'java.lang.Integer'
+                            }
+                            forcedType {
+                                includeTypes = 'smallint unsigned'
+                                userType = 'java.lang.Integer'
                             }
                         }
                     }
@@ -76,8 +100,6 @@ jooq {
                         // java.sql.[Date|Time|Timestamp] 대신 java.time[LocalDate|LocalTime|LocalDateTime] 반환
                         javaTimeTypes = true
                         deprecated = false
-                        // jOOQ에서 제공하는 unsinged type 사용여부
-                        // unsingedTypes = true
                         // 특정 데이터 타입을 DSL에서 강제로 다른 타입으로 지정 (e.g. INET, JSON → varchar)
                         // forceTypes = true
 
