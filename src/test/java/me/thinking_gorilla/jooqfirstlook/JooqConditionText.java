@@ -1,5 +1,7 @@
 package me.thinking_gorilla.jooqfirstlook;
 
+import me.thinking_gorilla.jooqfirstlook.actor.ActorFilmography;
+import me.thinking_gorilla.jooqfirstlook.actor.ActorFilmographySearchCondition;
 import me.thinking_gorilla.jooqfirstlook.actor.ActorRepository;
 import org.jooq.generated.tables.pojos.Actor;
 import org.junit.jupiter.api.DisplayName;
@@ -79,5 +81,39 @@ public class JooqConditionText {
 
         // then
         assertThat(actors).hasSizeGreaterThan(1);
+    }
+
+    @Test
+    @DisplayName("다중 조건 검색 - 배우 이름으로 조회")
+    void multi_condition_case_1() {
+        // given
+        var searchCondition = ActorFilmographySearchCondition
+                .builder()
+                .actorName("LOLLOBRIGIDA")
+                .build();
+
+        // when
+        List<ActorFilmography> filmographies = actorRepository.findActorFilmography(searchCondition);
+
+        // then
+        assertThat(filmographies).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("다중 조건 검색 - 배우 이름과 영화 제목으로 조회")
+    void multi_condition_case_2() {
+        // given
+        var searchCondition = ActorFilmographySearchCondition
+                .builder()
+                .actorName("LOLLOBRIGIDA")
+                .filmTitle("COMMANDMENTS EXPRESS")
+                .build();
+
+        // when
+        List<ActorFilmography> filmographies = actorRepository.findActorFilmography(searchCondition);
+
+        // then
+        assertThat(filmographies).hasSize(1);
+        assertThat(filmographies.get(0).films()).hasSize(1);
     }
 }
