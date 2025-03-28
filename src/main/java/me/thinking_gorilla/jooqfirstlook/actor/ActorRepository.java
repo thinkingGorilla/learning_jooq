@@ -5,11 +5,11 @@ import org.jooq.DSLContext;
 import org.jooq.generated.tables.JActor;
 import org.jooq.generated.tables.daos.ActorDao;
 import org.jooq.generated.tables.pojos.Actor;
-import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Objects;
+
+import static me.thinking_gorilla.jooqfirstlook.utils.JooqListConditionUtil.inIfNotEmpty;
 
 @Repository
 public class ActorRepository {
@@ -38,10 +38,11 @@ public class ActorRepository {
                 .where(ACTOR.FIRST_NAME.eq(firstName).or(ACTOR.LAST_NAME.eq(lastName)))
                 .fetchInto(Actor.class);
     }
+
     public List<Actor> findByActorIdIn(List<Long> ids) {
         return dslContext.selectFrom(ACTOR)
                 // DSL.noCondition()으로 `where false` 구문을 없앨 수 있다.
-                .where(Objects.isNull(ids) || ids.isEmpty() ? DSL.noCondition() : ACTOR.ACTOR_ID.in(ids))
+                .where(inIfNotEmpty(ACTOR.ACTOR_ID, ids))
                 .fetchInto(Actor.class);
     }
 }
