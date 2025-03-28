@@ -14,12 +14,14 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE;
 
+// @formatter:off
 @JooqTest(
-        includeFilters = @ComponentScan.Filter(
-                type = ASSIGNABLE_TYPE,
-                classes = {FilmIsARepository.class, FilmHasARepository.class}
-        )
+    includeFilters = @ComponentScan.Filter(
+        type = ASSIGNABLE_TYPE,
+        classes = {FilmIsARepository.class, FilmHasARepository.class}
+    )
 )
+// @formatter:on
 public class JooqDaoWrapperTest {
 
     @Autowired
