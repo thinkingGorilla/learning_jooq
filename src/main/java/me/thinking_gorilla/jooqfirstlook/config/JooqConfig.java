@@ -21,7 +21,7 @@ public class JooqConfig {
                 // 2. 테스트 환경과 운영 환경에서 스키마가 다를 경우 유연하게 대응하기 위해
                 //  - 예: 로컬에서는 test_schema.users, 운영에서는 prod_schema.users를 사용하는 경우.
                 //
-                // 3. JOOQ가 생성하는 SQL을 더 짧고 간결하게 만들기 위해
+                // 3. jOOQ가 생성하는 SQL을 더 짧고 간결하게 만들기 위해
                 //  - SQL이 스키마 없이 실행 가능하다면, renderSchema: false로 설정하여 불필요한 길이를 줄일 수 있음.
                 .withRenderSchema(false);
     }
