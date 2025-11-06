@@ -1,12 +1,15 @@
 package me.thinking_gorilla.jooqfirstlook.film;
 
 import lombok.RequiredArgsConstructor;
+import me.thinking_gorilla.jooqfirstlook.config.converter.PriceCategoryConverter;
+import me.thinking_gorilla.jooqfirstlook.film.FilmPriceSummary.PriceCategory;
 import org.jooq.DSLContext;
 import org.jooq.DatePart;
 import org.jooq.Record2;
 import org.jooq.Table;
 import org.jooq.generated.tables.*;
 import org.jooq.generated.tables.pojos.Film;
+import org.jooq.impl.EnumConverter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
@@ -70,7 +73,14 @@ public class FilmRepository {
                     .when(FILM.RENTAL_RATE.le(BigDecimal.valueOf(1.0)), "Cheap")
                     .when(FILM.RENTAL_RATE.le(BigDecimal.valueOf(3.0)), "Moderate")
                 .else_("Expensive")
-                .as("price_category"),
+                .as("price_category")
+                // .convert(new PriceCategoryConverter()),
+                // .convert(new EnumConverter<>(String.class, PriceCategory.class)),
+                // .convert(PriceCategory.class, PriceCategory::findByCode, PriceCategory::getCode),
+                // if conversions only happen from the database type
+                .convertFrom(PriceCategory.class, PriceCategory::findByCode),
+                // if when you only need to convert from the user type (the U type) to the database type
+                // .convertTo(PriceCategory.class, PriceCategory::getCode)
                 selectCount()
                     .from(INVENTORY)
                     .where(INVENTORY.FILM_ID.eq(FILM.FILM_ID))
