@@ -94,7 +94,7 @@ jooq {
                         records = true
                         // DB 테이블에 대응되는 pojo 자동생성
                         // pojos = true
-                        immutablePojos = true
+                        immutablePojos = false
                         // pojo나 record 생성 시 return 값이 void 대신 객체 자체를 반환
                         fluentSetters = true
                         // java.sql.[Date|Time|Timestamp] 대신 java.time[LocalDate|LocalTime|LocalDateTime] 반환

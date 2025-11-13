@@ -8,6 +8,7 @@ import org.jooq.generated.tables.JFilmActor;
 import org.jooq.generated.tables.daos.ActorDao;
 import org.jooq.generated.tables.pojos.Actor;
 import org.jooq.generated.tables.pojos.Film;
+import org.jooq.generated.tables.records.ActorRecord;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
@@ -81,5 +82,75 @@ public class ActorRepository {
                 .stream()
                 .map(entry -> new ActorFilmography(entry.getKey(), entry.getValue()))
                 .toList();
+    }
+
+    public Actor saveByDao(Actor actor) {
+        // 이때 PK가 actor 객체에 추가됨
+        // issue#2536
+        // jOOQ의 DAO를 통해 insert()할 때, DB가 생성한 IDENTITY(예: AUTO_INCREMENT) 값이 POJO 객체에 자동 반영되지 않는다.
+        // Lukas Eder - 필요성은 이해하지만, 자동으로 POJO를 수정하는 것은 예상치 못한 부작용(side-effect) 이 될 수 있음.
+        // @walec51 - dao.insertAndFetch(pojo) 형태의 메서드를 생성하면 좋겠다는 의견.
+        // 이 메서드는 ID뿐 아니라 trigger로 생성된 다른 값들도 가져올 수 있음.
+        // @chuchiperriman(반론) - insertAndFetch는 내부적으로 두 번의 쿼리를 실행하므로 성능상 다름.
+        // 자신이 원한 건 단순히 insert() 호출 후 POJO의 ID만 반영되는 것.
+        // 대부분의 SQL dialect에서는 getGeneratedKeys() 또는 RETURNING 구문을 통해 추가 round-trip 없이 ID를 가져올 수 있음.
+        // INSERT INTO users (name) VALUES ('Alice') RETURNING id, created_at;
+        actorDao.insert(actor);
+        return actor;
+    }
+
+    public ActorRecord saveByRecord(Actor actor) {
+        ActorRecord record = dslContext.newRecord(ACTOR, actor);
+        record.insert();
+        return record;
+    }
+
+    public Actor saveWithReturningPkOnly(Actor actor) {
+        // RETURNING 구문이 해당 dialect에서 지원되지 않을 경우 SELECT를 추가로 실행한다.
+        // PostgresQL, MariaDB 등은 RETURNING 구문을 지원한다
+        return dslContext.insertInto(
+            ACTOR,
+            ACTOR.FIRST_NAME,
+            ACTOR.LAST_NAME
+        )
+        .values(
+            actor.getFirstName(),
+            actor.getLastName()
+        )
+        .returningResult(ACTOR.ACTOR_ID)
+        .fetchOneInto(Actor.class);
+    }
+
+    public Actor saveWithReturning(Actor actor) {
+        return dslContext.insertInto(
+                ACTOR,
+                ACTOR.FIRST_NAME,
+                ACTOR.LAST_NAME
+        )
+        .values(
+                actor.getFirstName(),
+                actor.getLastName()
+        )
+        .returning(ACTOR.fields())
+        .fetchOneInto(Actor.class);
+    }
+
+    public List<Actor> bulkInsertWithRows(List<Actor> actors) {
+        return dslContext.insertInto(
+                ACTOR,
+                ACTOR.FIRST_NAME,
+                ACTOR.LAST_NAME
+        )
+        .valuesOfRows(
+            actors
+                .stream()
+                .map(actor -> DSL.row(
+                    actor.getFirstName(),
+                    actor.getLastName()
+                ))
+                .toList()
+        )
+        .returning(ACTOR.fields())
+        .fetchInto(Actor.class);
     }
 }
