@@ -60,9 +60,9 @@ public class JooqInsertTest {
         actor.setLastName("KIM");
         // actor.setLastUpdate(LocalDateTime.now());
 
-        Actor saved = actorRepository.saveWithReturningPkOnly(actor);
+        Long savedId = actorRepository.saveWithReturningPkOnly(actor);
 
-        assertNotNull(saved);
+        assertNotNull(savedId);
     }
 
     @Test

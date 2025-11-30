@@ -2,6 +2,7 @@ package me.thinking_gorilla.jooqfirstlook.actor;
 
 import org.jooq.Configuration;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.generated.tables.JActor;
 import org.jooq.generated.tables.JFilm;
 import org.jooq.generated.tables.JFilmActor;
@@ -9,13 +10,15 @@ import org.jooq.generated.tables.daos.ActorDao;
 import org.jooq.generated.tables.pojos.Actor;
 import org.jooq.generated.tables.pojos.Film;
 import org.jooq.generated.tables.records.ActorRecord;
-import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 
+import static java.util.Objects.isNull;
 import static me.thinking_gorilla.jooqfirstlook.utils.JooqListConditionUtil.containsIfNotBlank;
 import static me.thinking_gorilla.jooqfirstlook.utils.JooqListConditionUtil.inIfNotEmpty;
+import static org.jooq.impl.DSL.*;
 
 @Repository
 public class ActorRepository {
@@ -58,8 +61,8 @@ public class ActorRepository {
         final JFilm FILM = JFilm.FILM;
 
         return dslContext.select(
-                        DSL.row(ACTOR.fields()).as("actor"),
-                        DSL.row(FILM.fields()).as("film")
+                        row(ACTOR.fields()).as("actor"),
+                        row(FILM.fields()).as("film")
                 ).from(FILM_ACTOR)
                 .join(FILM)
                 .on(FILM_ACTOR.FILM_ID.eq(FILM.FILM_ID))
@@ -106,53 +109,53 @@ public class ActorRepository {
         return record;
     }
 
-    public Actor saveWithReturningPkOnly(Actor actor) {
+    public Long saveWithReturningPkOnly(Actor actor) {
         // RETURNING 구문이 해당 dialect에서 지원되지 않을 경우 SELECT를 추가로 실행한다.
         // PostgresQL, MariaDB 등은 RETURNING 구문을 지원한다
         return dslContext.insertInto(
-            ACTOR,
-            ACTOR.FIRST_NAME,
-            ACTOR.LAST_NAME
-        )
-        .values(
-            actor.getFirstName(),
-            actor.getLastName()
-        )
-        .returningResult(ACTOR.ACTOR_ID)
-        .fetchOneInto(Actor.class);
+                        ACTOR,
+                        ACTOR.FIRST_NAME,
+                        ACTOR.LAST_NAME
+                )
+                .values(
+                        actor.getFirstName(),
+                        actor.getLastName()
+                )
+                .returningResult(ACTOR.ACTOR_ID)
+                .fetchOneInto(Long.class);
     }
 
     public Actor saveWithReturning(Actor actor) {
         return dslContext.insertInto(
-                ACTOR,
-                ACTOR.FIRST_NAME,
-                ACTOR.LAST_NAME
-        )
-        .values(
-                actor.getFirstName(),
-                actor.getLastName()
-        )
-        .returning(ACTOR.fields())
-        .fetchOneInto(Actor.class);
+                        ACTOR,
+                        ACTOR.FIRST_NAME,
+                        ACTOR.LAST_NAME
+                )
+                .values(
+                        actor.getFirstName(),
+                        actor.getLastName()
+                )
+                .returning(ACTOR.fields())
+                .fetchOneInto(Actor.class);
     }
 
     public List<Actor> bulkInsertWithRows(List<Actor> actors) {
         return dslContext.insertInto(
-                ACTOR,
-                ACTOR.FIRST_NAME,
-                ACTOR.LAST_NAME
-        )
-        .valuesOfRows(
-            actors
-                .stream()
-                .map(actor -> DSL.row(
-                    actor.getFirstName(),
-                    actor.getLastName()
-                ))
-                .toList()
-        )
-        .returning(ACTOR.fields())
-        .fetchInto(Actor.class);
+                        ACTOR,
+                        ACTOR.FIRST_NAME,
+                        ACTOR.LAST_NAME
+                )
+                .valuesOfRows(
+                        actors
+                                .stream()
+                                .map(actor -> row(
+                                        actor.getFirstName(),
+                                        actor.getLastName()
+                                ))
+                                .toList()
+                )
+                .returning(ACTOR.fields())
+                .fetchInto(Actor.class);
     }
 
     public void update(Actor actor) {
@@ -161,5 +164,58 @@ public class ActorRepository {
 
     public Actor filmByActorId(Long actorId) {
         return actorDao.findById(actorId);
+    }
+
+    public int updateWithDto(Long newActorId, ActorUpdateRequest request) {
+        Field<String> firstName = StringUtils.hasText(request.getFirstName())
+                ? val(request.getFirstName())
+                : noField(ACTOR.FIRST_NAME);
+        Field<String> lastName = StringUtils.hasText(request.getLastName())
+                ? val(request.getLastName())
+                : noField(ACTOR.LAST_NAME);
+
+        return dslContext.update(ACTOR)
+                .set(ACTOR.FIRST_NAME, firstName)
+                .set(ACTOR.LAST_NAME, lastName)
+                .where(ACTOR.ACTOR_ID.eq(newActorId))
+                .execute();
+    }
+
+    public int updateWithRecord(Long newActorId, ActorUpdateRequest request) {
+        ActorRecord fetched = dslContext.fetchOne(ACTOR, ACTOR.ACTOR_ID.eq(newActorId));
+
+        if (isNull(fetched)) {
+            return 0;
+        }
+
+        if (StringUtils.hasText(request.getFirstName())) {
+            fetched.setFirstName(request.getFirstName());
+        }
+        if (StringUtils.hasText(request.getLastName())) {
+            fetched.setLastName(request.getLastName());
+        }
+
+        return dslContext.update(ACTOR)
+                .set(fetched)
+                // .where(ACTOR.ACTOR_ID.eq(newActorId))
+                .execute();
+        // return fetched.store();
+    }
+
+    public int delete(Long newActorId) {
+        // actorDao.deleteById(newActorId);
+        return dslContext.deleteFrom(ACTOR)
+                .where(ACTOR.ACTOR_ID.eq(newActorId))
+                .execute();
+    }
+
+    public int deleteWithRecord(Long newActorId) {
+        ActorRecord fetched = dslContext.fetchOne(ACTOR, ACTOR.ACTOR_ID.eq(newActorId));
+
+        if (isNull(fetched)) {
+            return 0;
+        }
+
+        return fetched.delete();
     }
 }

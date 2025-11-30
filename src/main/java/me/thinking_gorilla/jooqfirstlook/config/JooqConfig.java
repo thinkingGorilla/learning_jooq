@@ -1,5 +1,6 @@
 package me.thinking_gorilla.jooqfirstlook.config;
 
+import org.jooq.conf.ExecuteWithoutWhere;
 import org.springframework.boot.autoconfigure.jooq.DefaultConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +24,9 @@ public class JooqConfig {
                 //
                 // 3. jOOQ가 생성하는 SQL을 더 짧고 간결하게 만들기 위해
                 //  - SQL이 스키마 없이 실행 가능하다면, renderSchema: false로 설정하여 불필요한 길이를 줄일 수 있음.
-                .withRenderSchema(false);
+                .withRenderSchema(false)
+                // update, delete 절에서 조건이 없을 경우 예외를 던지도록 설정
+                .withExecuteUpdateWithoutWhere(ExecuteWithoutWhere.THROW)
+                .withExecuteDeleteWithoutWhere(ExecuteWithoutWhere.THROW);
     }
 }
