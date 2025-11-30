@@ -72,6 +72,7 @@ public class ActorRepository {
                         containsIfNotBlank(FILM.TITLE, searchCondition.getFilmTitle())
                 )
                 .fetchGroups(
+                        // 애플리케이션 수준에서 그룹핑
                         // 나열하는 순서가 중요하다.
                         // `actor → film`은 배우별로 영화 목록이지만(= Map<Actor, List<Film>>),
                         // `film → actor`으로 나열하면 영화별로 등장한 배우 목록이 된다(= Map<Film, List<Actor>>).
@@ -86,9 +87,9 @@ public class ActorRepository {
 
     public Actor saveByDao(Actor actor) {
         // 이때 PK가 actor 객체에 추가됨
-        // issue#2536
+        // https://github.com/jOOQ/jOOQ/issues/2536
         // jOOQ의 DAO를 통해 insert()할 때, DB가 생성한 IDENTITY(예: AUTO_INCREMENT) 값이 POJO 객체에 자동 반영되지 않는다.
-        // Lukas Eder - 필요성은 이해하지만, 자동으로 POJO를 수정하는 것은 예상치 못한 부작용(side-effect) 이 될 수 있음.
+        // @Lukas Eder - 필요성은 이해하지만, 자동으로 POJO를 수정하는 것은 예상치 못한 부작용(side-effect) 이 될 수 있음.
         // @walec51 - dao.insertAndFetch(pojo) 형태의 메서드를 생성하면 좋겠다는 의견.
         // 이 메서드는 ID뿐 아니라 trigger로 생성된 다른 값들도 가져올 수 있음.
         // @chuchiperriman(반론) - insertAndFetch는 내부적으로 두 번의 쿼리를 실행하므로 성능상 다름.
@@ -152,5 +153,13 @@ public class ActorRepository {
         )
         .returning(ACTOR.fields())
         .fetchInto(Actor.class);
+    }
+
+    public void update(Actor actor) {
+        actorDao.update(actor);
+    }
+
+    public Actor filmByActorId(Long actorId) {
+        return actorDao.findById(actorId);
     }
 }

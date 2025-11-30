@@ -15,15 +15,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE;
 
-// @formatter:off
-@JooqTest(
-    includeFilters = @ComponentScan.Filter(
-    type = ASSIGNABLE_TYPE,
-        classes = {ActorRepository.class}
-    )
-)
-// @formatter:on
-public class JooqConditionText {
+@JooqTest(includeFilters = @ComponentScan.Filter(type = ASSIGNABLE_TYPE, classes = ActorRepository.class))
+public class JooqConditionTest {
 
     @Autowired
     private ActorRepository actorRepository;

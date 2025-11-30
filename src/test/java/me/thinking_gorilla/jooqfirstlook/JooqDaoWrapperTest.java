@@ -12,16 +12,10 @@ import org.springframework.context.annotation.ComponentScan;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.context.annotation.ComponentScan.*;
 import static org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE;
 
-// @formatter:off
-@JooqTest(
-    includeFilters = @ComponentScan.Filter(
-        type = ASSIGNABLE_TYPE,
-        classes = {FilmIsARepository.class, FilmHasARepository.class}
-    )
-)
-// @formatter:on
+@JooqTest(includeFilters = @Filter(type = ASSIGNABLE_TYPE, classes = {FilmIsARepository.class, FilmHasARepository.class}))
 public class JooqDaoWrapperTest {
 
     @Autowired

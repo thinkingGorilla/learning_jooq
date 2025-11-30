@@ -17,14 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.context.annotation.ComponentScan.Filter;
 import static org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE;
 
-// @formatter:off
-@JooqTest(
-    includeFilters = @Filter(
-        type = ASSIGNABLE_TYPE,
-        classes = FilmRepository.class
-    )
-)
-// @formatter:on
+@JooqTest(includeFilters = @Filter(type = ASSIGNABLE_TYPE, classes = FilmRepository.class))
 public class JooqSubqueryTest {
 
     @Autowired
