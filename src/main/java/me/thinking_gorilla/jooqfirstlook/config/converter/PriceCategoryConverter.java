@@ -15,7 +15,7 @@ public class PriceCategoryConverter extends EnumConverter<String, PriceCategory>
         // Math::random → Supplier<Double>
         // e.g.
         // Predicate<T> → 함수형 인터페이스
-        // T -> boolean → 함수 디스크립
+        // T -> boolean → 함수 디스크립터
         // ClassName::static_method → 메서드 참조
         super(String.class, PriceCategory.class, PriceCategory::getCode);
     }
