@@ -1,0 +1,36 @@
+package me.thinking_gorilla;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.*;
+
+import java.io.*;
+import java.util.*;
+
+@Getter
+@Setter
+@Embeddable
+public class FilmActorId implements Serializable {
+
+    private static final long serialVersionUID = -6102408686104668723L;
+
+    @Column(name = "actor_id")
+    private Long actorId;
+
+    @Column(name = "film_id")
+    private Long filmId;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        FilmActorId entity = (FilmActorId) o;
+        return Objects.equals(this.actorId, entity.actorId) &&
+            Objects.equals(this.filmId, entity.filmId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(actorId, filmId);
+    }
+}
