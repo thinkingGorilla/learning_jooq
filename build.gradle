@@ -33,6 +33,9 @@ sourceSets {
 dependencies {
     implementation "org.jooq:jooq:${jooqVersion}"
 
+    // https://github.com/etiennestuder/gradle-jooq-plugin
+    // jOOQ code generation tool will introspect to the jooqGenerator configuration.
+    // This ensures that the database driver is on the classpath when the jOOQ code generation tool is executed.
     jooqGenerator project(':jooq-custom')
     jooqGenerator "org.jooq:jooq:${jooqVersion}"
     jooqGenerator "org.jooq:jooq-meta:${jooqVersion}"
@@ -50,37 +53,45 @@ dependencies {
 
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
+
+    jooqGenerator project(':entity')
+    jooqGenerator "org.jooq:jooq-meta-extensions-hibernate:${jooqVersion}"
+    // in-memory H2로 JOOQ dsl 생성을 위함
+    // h2의 v2 버전 호환성 때문에 상위버전 대신 1.4.200 버전을 추천
+    jooqGenerator 'com.h2database:h2:1.4.200'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
 }
 
-String dbUser = System.properties['db-user'] ?: 'root'
-String dbPasswd = System.properties['db-passwd'] ?: 'passwd'
-
 jooq {
     version = "${jooqVersion}"
     configurations {
         sakilaDB {
             generationTool {
-                jdbc {
-                    driver = 'com.mysql.cj.jdbc.Driver'
-                    url = 'jdbc:mysql://localhost:3306'
-                    user = "${dbUser}"
-                    password = "${dbPasswd}"
-                }
                 generator {
                     name = 'org.jooq.codegen.DefaultGenerator'
                     database {
-                        name = 'org.jooq.meta.mysql.MySQLDatabase'
+                        name = 'org.jooq.meta.extensions.jpa.JPADatabase'
                         // jOOQ에서 제공하는 unsinged type 사용여부
                         unsignedTypes = true
-                        schemata {
-                            schema {
-                                inputSchema = 'sakila'
+
+                        properties {
+                            property {
+                                key = 'packages'
+                                value = 'me.thinking_gorilla'
+                            }
+
+                            // 2순위
+                            // DSL 생성시, jpa의 AttributeConverters 에 따라 jooq DSL의 타입을 매핑할지 여부
+                            property {
+                                key = 'useAttributeConverters'
+                                value = true
                             }
                         }
+
+                        // 1순위
                         forcedTypes {
                             forcedType {
                                 includeTypes = 'int unsigned'
