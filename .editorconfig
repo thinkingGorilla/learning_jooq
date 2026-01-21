@@ -1,0 +1,17 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+
+[*.java]
+# Java 특정 설정
+ij_java_use_single_class_imports = false
+ij_java_insert_inner_class_imports = false
+ij_java_class_count_to_use_import_on_demand = 99
+ij_java_names_count_to_use_import_on_demand = 99
+ij_java_blank_lines_around_method = 1
+ij_java_space_before_method_parentheses = false

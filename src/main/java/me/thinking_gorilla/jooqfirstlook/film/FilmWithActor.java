@@ -1,9 +1,7 @@
 package me.thinking_gorilla.jooqfirstlook.film;
 
-import lombok.RequiredArgsConstructor;
-import org.jooq.generated.tables.pojos.Actor;
-import org.jooq.generated.tables.pojos.Film;
-import org.jooq.generated.tables.pojos.FilmActor;
+import lombok.*;
+import org.jooq.generated.tables.pojos.*;
 
 @RequiredArgsConstructor
 public final class FilmWithActor {

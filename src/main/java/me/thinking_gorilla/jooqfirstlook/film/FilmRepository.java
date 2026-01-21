@@ -1,20 +1,15 @@
 package me.thinking_gorilla.jooqfirstlook.film;
 
-import lombok.RequiredArgsConstructor;
-import me.thinking_gorilla.jooqfirstlook.config.converter.PriceCategoryConverter;
-import me.thinking_gorilla.jooqfirstlook.film.FilmPriceSummary.PriceCategory;
-import org.jooq.DSLContext;
-import org.jooq.DatePart;
-import org.jooq.Record2;
-import org.jooq.Table;
+import lombok.*;
+import me.thinking_gorilla.jooqfirstlook.film.FilmPriceSummary.*;
+import org.jooq.*;
 import org.jooq.generated.tables.*;
-import org.jooq.generated.tables.pojos.Film;
-import org.jooq.impl.EnumConverter;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
+import org.jooq.generated.tables.pojos.*;
+import org.springframework.data.domain.*;
+import org.springframework.stereotype.*;
 
-import java.math.BigDecimal;
-import java.util.List;
+import java.math.*;
+import java.util.*;
 
 import static org.jooq.generated.tables.JInventory.*;
 import static org.jooq.generated.tables.JRental.*;
@@ -29,18 +24,18 @@ public class FilmRepository {
 
     public Film findById(Long id) {
         return dslContext
-                .select(FILM.fields())
-                .from(FILM)
-                .where(FILM.FILM_ID.eq(id))
-                .fetchOneInto(Film.class);
+            .select(FILM.fields())
+            .from(FILM)
+            .where(FILM.FILM_ID.eq(id))
+            .fetchOneInto(Film.class);
     }
 
     public SimpleFilmInfo findSimpleFilmInfoById(Long id) {
         return dslContext
-                .select(FILM.FILM_ID, FILM.TITLE, FILM.DESCRIPTION)
-                .from(FILM)
-                .where(FILM.FILM_ID.eq(id))
-                .fetchOneInto(SimpleFilmInfo.class);
+            .select(FILM.FILM_ID, FILM.TITLE, FILM.DESCRIPTION)
+            .from(FILM)
+            .where(FILM.FILM_ID.eq(id))
+            .fetchOneInto(SimpleFilmInfo.class);
     }
 
     public List<FilmWithActor> findFilmWithActors(Pageable pageable) {
@@ -48,19 +43,19 @@ public class FilmRepository {
         JActor ACTOR = JActor.ACTOR;
 
         return dslContext
-                .select(
-                        row(FILM.fields()),
-                        row(FILM_ACTOR.fields()),
-                        row(ACTOR.fields())
-                )
-                .from(FILM_ACTOR)
-                .join(FILM)
-                .on(FILM_ACTOR.FILM_ID.eq(FILM.FILM_ID))
-                .join(ACTOR)
-                .on(FILM_ACTOR.ACTOR_ID.eq(ACTOR.ACTOR_ID))
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetchInto(FilmWithActor.class);
+            .select(
+                row(FILM.fields()),
+                row(FILM_ACTOR.fields()),
+                row(ACTOR.fields())
+            )
+            .from(FILM_ACTOR)
+            .join(FILM)
+            .on(FILM_ACTOR.FILM_ID.eq(FILM.FILM_ID))
+            .join(ACTOR)
+            .on(FILM_ACTOR.ACTOR_ID.eq(ACTOR.ACTOR_ID))
+            .offset(pageable.getOffset())
+            .limit(pageable.getPageSize())
+            .fetchInto(FilmWithActor.class);
     }
 
     public List<FilmPriceSummary> findFilmPriceSummaryByFilmTitle(String filmTitle) {
@@ -72,13 +67,13 @@ public class FilmRepository {
                 case_()
                     .when(FILM.RENTAL_RATE.le(BigDecimal.valueOf(1.0)), "Cheap")
                     .when(FILM.RENTAL_RATE.le(BigDecimal.valueOf(3.0)), "Moderate")
-                .else_("Expensive")
-                .as("price_category")
-                // .convert(new PriceCategoryConverter()),
-                // .convert(new EnumConverter<>(String.class, PriceCategory.class)),
-                // .convert(PriceCategory.class, PriceCategory::findByCode, PriceCategory::getCode),
-                // if conversions only happen from the database type
-                .convertFrom(PriceCategory.class, PriceCategory::findByCode),
+                    .else_("Expensive")
+                    .as("price_category")
+                    // .convert(new PriceCategoryConverter()),
+                    // .convert(new EnumConverter<>(String.class, PriceCategory.class)),
+                    // .convert(PriceCategory.class, PriceCategory::findByCode, PriceCategory::getCode),
+                    // if conversions only happen from the database type
+                    .convertFrom(PriceCategory.class, PriceCategory::findByCode),
                 // if when you only need to convert from the user type (the U type) to the database type
                 // .convertTo(PriceCategory.class, PriceCategory::getCode)
                 selectCount()
@@ -94,9 +89,9 @@ public class FilmRepository {
 
     public List<FilmRentalSummary> findFilmRentalSummaryByFilmTitle(String filmTitle) {
         var inlineViewSubquery = select(
-                INVENTORY.FILM_ID,
-                avg(localDateTimeDiff(DatePart.DAY, RENTAL.RENTAL_DATE, RENTAL.RETURN_DATE)).as("average_rental_duration")
-            )
+            INVENTORY.FILM_ID,
+            avg(localDateTimeDiff(DatePart.DAY, RENTAL.RENTAL_DATE, RENTAL.RETURN_DATE)).as("average_rental_duration")
+        )
             .from(RENTAL)
             .join(INVENTORY)
             .on(RENTAL.INVENTORY_ID.eq(INVENTORY.INVENTORY_ID))

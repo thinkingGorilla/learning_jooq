@@ -1,23 +1,17 @@
 package me.thinking_gorilla.jooqfirstlook.actor;
 
-import org.jooq.Configuration;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.generated.tables.JActor;
-import org.jooq.generated.tables.JFilm;
-import org.jooq.generated.tables.JFilmActor;
-import org.jooq.generated.tables.daos.ActorDao;
-import org.jooq.generated.tables.pojos.Actor;
-import org.jooq.generated.tables.pojos.Film;
-import org.jooq.generated.tables.records.ActorRecord;
-import org.springframework.stereotype.Repository;
-import org.springframework.util.StringUtils;
+import org.jooq.*;
+import org.jooq.generated.tables.*;
+import org.jooq.generated.tables.daos.*;
+import org.jooq.generated.tables.pojos.*;
+import org.jooq.generated.tables.records.*;
+import org.springframework.stereotype.*;
+import org.springframework.util.*;
 
-import java.util.List;
+import java.util.*;
 
-import static java.util.Objects.isNull;
-import static me.thinking_gorilla.jooqfirstlook.utils.JooqListConditionUtil.containsIfNotBlank;
-import static me.thinking_gorilla.jooqfirstlook.utils.JooqListConditionUtil.inIfNotEmpty;
+import static java.util.Objects.*;
+import static me.thinking_gorilla.jooqfirstlook.utils.JooqListConditionUtil.*;
 import static org.jooq.impl.DSL.*;
 
 @Repository
@@ -34,25 +28,25 @@ public class ActorRepository {
 
     public List<Actor> findByFirstNameAndLastName(String firstName, String lastName) {
         return dslContext.selectFrom(ACTOR)
-                .where(
-                        // ACTOR.FIRST_NAME.eq(firstName)
-                        // .and(ACTOR.LAST_NAME.eq(lastName))
-                        ACTOR.FIRST_NAME.eq(firstName),
-                        ACTOR.LAST_NAME.eq(lastName)
-                ).fetchInto(Actor.class);
+            .where(
+                // ACTOR.FIRST_NAME.eq(firstName)
+                // .and(ACTOR.LAST_NAME.eq(lastName))
+                ACTOR.FIRST_NAME.eq(firstName),
+                ACTOR.LAST_NAME.eq(lastName)
+            ).fetchInto(Actor.class);
     }
 
     public List<Actor> findByFirstNameOrLastName(String firstName, String lastName) {
         return dslContext.selectFrom(ACTOR)
-                .where(ACTOR.FIRST_NAME.eq(firstName).or(ACTOR.LAST_NAME.eq(lastName)))
-                .fetchInto(Actor.class);
+            .where(ACTOR.FIRST_NAME.eq(firstName).or(ACTOR.LAST_NAME.eq(lastName)))
+            .fetchInto(Actor.class);
     }
 
     public List<Actor> findByActorIdIn(List<Long> ids) {
         return dslContext.selectFrom(ACTOR)
-                // DSL.noCondition()으로 `where false` 구문을 없앨 수 있다.
-                .where(inIfNotEmpty(ACTOR.ACTOR_ID, ids))
-                .fetchInto(Actor.class);
+            // DSL.noCondition()으로 `where false` 구문을 없앨 수 있다.
+            .where(inIfNotEmpty(ACTOR.ACTOR_ID, ids))
+            .fetchInto(Actor.class);
     }
 
     public List<ActorFilmography> findActorFilmography(ActorFilmographySearchCondition searchCondition) {
@@ -61,31 +55,31 @@ public class ActorRepository {
         final JFilm FILM = JFilm.FILM;
 
         return dslContext.select(
-                        row(ACTOR.fields()).as("actor"),
-                        row(FILM.fields()).as("film")
-                ).from(FILM_ACTOR)
-                .join(FILM)
-                .on(FILM_ACTOR.FILM_ID.eq(FILM.FILM_ID))
-                .join(ACTOR)
-                .on(FILM_ACTOR.ACTOR_ID.eq(ACTOR.ACTOR_ID))
-                // 캐스캐이딩된 조건이 나오니 주의
-                // .fetchInto(ActorFilmography.class)
-                .where(
-                        containsIfNotBlank(ACTOR.FIRST_NAME.concat(" ").concat(ACTOR.LAST_NAME), searchCondition.getActorName()),
-                        containsIfNotBlank(FILM.TITLE, searchCondition.getFilmTitle())
-                )
-                .fetchGroups(
-                        // 애플리케이션 수준에서 그룹핑
-                        // 나열하는 순서가 중요하다.
-                        // `actor → film`은 배우별로 영화 목록이지만(= Map<Actor, List<Film>>),
-                        // `film → actor`으로 나열하면 영화별로 등장한 배우 목록이 된다(= Map<Film, List<Actor>>).
-                        record -> record.get("actor", Actor.class),
-                        record -> record.get("film", Film.class)
-                )
-                .entrySet()
-                .stream()
-                .map(entry -> new ActorFilmography(entry.getKey(), entry.getValue()))
-                .toList();
+                row(ACTOR.fields()).as("actor"),
+                row(FILM.fields()).as("film")
+            ).from(FILM_ACTOR)
+            .join(FILM)
+            .on(FILM_ACTOR.FILM_ID.eq(FILM.FILM_ID))
+            .join(ACTOR)
+            .on(FILM_ACTOR.ACTOR_ID.eq(ACTOR.ACTOR_ID))
+            // 캐스캐이딩된 조건이 나오니 주의
+            // .fetchInto(ActorFilmography.class)
+            .where(
+                containsIfNotBlank(ACTOR.FIRST_NAME.concat(" ").concat(ACTOR.LAST_NAME), searchCondition.getActorName()),
+                containsIfNotBlank(FILM.TITLE, searchCondition.getFilmTitle())
+            )
+            .fetchGroups(
+                // 애플리케이션 수준에서 그룹핑
+                // 나열하는 순서가 중요하다.
+                // `actor → film`은 배우별로 영화 목록이지만(= Map<Actor, List<Film>>),
+                // `film → actor`으로 나열하면 영화별로 등장한 배우 목록이 된다(= Map<Film, List<Actor>>).
+                record -> record.get("actor", Actor.class),
+                record -> record.get("film", Film.class)
+            )
+            .entrySet()
+            .stream()
+            .map(entry -> new ActorFilmography(entry.getKey(), entry.getValue()))
+            .toList();
     }
 
     public Actor saveByDao(Actor actor) {
@@ -113,49 +107,49 @@ public class ActorRepository {
         // RETURNING 구문이 해당 dialect에서 지원되지 않을 경우 SELECT를 추가로 실행한다.
         // PostgresQL, MariaDB 등은 RETURNING 구문을 지원한다
         return dslContext.insertInto(
-                        ACTOR,
-                        ACTOR.FIRST_NAME,
-                        ACTOR.LAST_NAME
-                )
-                .values(
-                        actor.getFirstName(),
-                        actor.getLastName()
-                )
-                .returningResult(ACTOR.ACTOR_ID)
-                .fetchOneInto(Long.class);
+                ACTOR,
+                ACTOR.FIRST_NAME,
+                ACTOR.LAST_NAME
+            )
+            .values(
+                actor.getFirstName(),
+                actor.getLastName()
+            )
+            .returningResult(ACTOR.ACTOR_ID)
+            .fetchOneInto(Long.class);
     }
 
     public Actor saveWithReturning(Actor actor) {
         return dslContext.insertInto(
-                        ACTOR,
-                        ACTOR.FIRST_NAME,
-                        ACTOR.LAST_NAME
-                )
-                .values(
-                        actor.getFirstName(),
-                        actor.getLastName()
-                )
-                .returning(ACTOR.fields())
-                .fetchOneInto(Actor.class);
+                ACTOR,
+                ACTOR.FIRST_NAME,
+                ACTOR.LAST_NAME
+            )
+            .values(
+                actor.getFirstName(),
+                actor.getLastName()
+            )
+            .returning(ACTOR.fields())
+            .fetchOneInto(Actor.class);
     }
 
     public List<Actor> bulkInsertWithRows(List<Actor> actors) {
         return dslContext.insertInto(
-                        ACTOR,
-                        ACTOR.FIRST_NAME,
-                        ACTOR.LAST_NAME
-                )
-                .valuesOfRows(
-                        actors
-                                .stream()
-                                .map(actor -> row(
-                                        actor.getFirstName(),
-                                        actor.getLastName()
-                                ))
-                                .toList()
-                )
-                .returning(ACTOR.fields())
-                .fetchInto(Actor.class);
+                ACTOR,
+                ACTOR.FIRST_NAME,
+                ACTOR.LAST_NAME
+            )
+            .valuesOfRows(
+                actors
+                    .stream()
+                    .map(actor -> row(
+                        actor.getFirstName(),
+                        actor.getLastName()
+                    ))
+                    .toList()
+            )
+            .returning(ACTOR.fields())
+            .fetchInto(Actor.class);
     }
 
     public void update(Actor actor) {
@@ -168,17 +162,17 @@ public class ActorRepository {
 
     public int updateWithDto(Long newActorId, ActorUpdateRequest request) {
         Field<String> firstName = StringUtils.hasText(request.getFirstName())
-                ? val(request.getFirstName())
-                : noField(ACTOR.FIRST_NAME);
+            ? val(request.getFirstName())
+            : noField(ACTOR.FIRST_NAME);
         Field<String> lastName = StringUtils.hasText(request.getLastName())
-                ? val(request.getLastName())
-                : noField(ACTOR.LAST_NAME);
+            ? val(request.getLastName())
+            : noField(ACTOR.LAST_NAME);
 
         return dslContext.update(ACTOR)
-                .set(ACTOR.FIRST_NAME, firstName)
-                .set(ACTOR.LAST_NAME, lastName)
-                .where(ACTOR.ACTOR_ID.eq(newActorId))
-                .execute();
+            .set(ACTOR.FIRST_NAME, firstName)
+            .set(ACTOR.LAST_NAME, lastName)
+            .where(ACTOR.ACTOR_ID.eq(newActorId))
+            .execute();
     }
 
     public int updateWithRecord(Long newActorId, ActorUpdateRequest request) {
@@ -196,17 +190,17 @@ public class ActorRepository {
         }
 
         return dslContext.update(ACTOR)
-                .set(fetched)
-                // .where(ACTOR.ACTOR_ID.eq(newActorId))
-                .execute();
+            .set(fetched)
+            // .where(ACTOR.ACTOR_ID.eq(newActorId))
+            .execute();
         // return fetched.store();
     }
 
     public int delete(Long newActorId) {
         // actorDao.deleteById(newActorId);
         return dslContext.deleteFrom(ACTOR)
-                .where(ACTOR.ACTOR_ID.eq(newActorId))
-                .execute();
+            .where(ACTOR.ACTOR_ID.eq(newActorId))
+            .execute();
     }
 
     public int deleteWithRecord(Long newActorId) {

@@ -1,8 +1,8 @@
 package me.thinking_gorilla.jooqfirstlook.film;
 
-import lombok.Getter;
+import lombok.*;
 
-import java.math.BigDecimal;
+import java.math.*;
 
 public record FilmPriceSummary(
     Long filmId,
