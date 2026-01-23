@@ -10,7 +10,9 @@ public class JooqConfig {
 
     @Bean
     public DefaultConfigurationCustomizer jooqConfigurationCustomizer() {
-        return config -> config.settings()
+        return config -> {
+            config.set(PerformanceListener::new);
+            config.settings()
                 // SELECT * FROM my_schema.users; (renderSchema: true)
                 // SELECT * FROM users; (renderSchema: false)
                 //
@@ -27,6 +29,8 @@ public class JooqConfig {
                 .withRenderSchema(false)
                 // update, delete 절에서 조건이 없을 경우 예외를 던지도록 설정
                 .withExecuteUpdateWithoutWhere(ExecuteWithoutWhere.THROW)
-                .withExecuteDeleteWithoutWhere(ExecuteWithoutWhere.THROW);
+                .withExecuteDeleteWithoutWhere(ExecuteWithoutWhere.THROW)
+                .withRenderSchema(false);
+        };
     }
 }
