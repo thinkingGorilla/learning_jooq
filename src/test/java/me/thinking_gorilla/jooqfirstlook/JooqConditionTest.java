@@ -13,9 +13,10 @@ import org.springframework.context.annotation.ComponentScan;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.context.annotation.ComponentScan.*;
 import static org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE;
 
-@JooqTest(includeFilters = @ComponentScan.Filter(type = ASSIGNABLE_TYPE, classes = ActorRepository.class))
+@JooqTest(includeFilters = @Filter(type = ASSIGNABLE_TYPE, classes = ActorRepository.class))
 public class JooqConditionTest {
 
     @Autowired

@@ -1,6 +1,6 @@
 package me.thinking_gorilla.jooqfirstlook.config;
 
-import org.jooq.conf.ExecuteWithoutWhere;
+import org.jooq.conf.*;
 import org.springframework.boot.autoconfigure.jooq.DefaultConfigurationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,7 +30,11 @@ public class JooqConfig {
                 // update, delete 절에서 조건이 없을 경우 예외를 던지도록 설정
                 .withExecuteUpdateWithoutWhere(ExecuteWithoutWhere.THROW)
                 .withExecuteDeleteWithoutWhere(ExecuteWithoutWhere.THROW)
-                .withRenderSchema(false);
+                .withRenderSchema(false)
+                // implicit path join to-many는 기본적으로 에러를 발생시켜 이렇게 수동으로 조인을 지정 해야한다.
+                .withRenderImplicitJoinToManyType(RenderImplicitJoinType.INNER_JOIN);
+                // implicit PATH JOIN many-to-one 을 비활성화 하고 싶다면 하고 싶다면
+                // .withRenderImplicitJoinType(RenderImplicitJoinType.THROW);
         };
     }
 }

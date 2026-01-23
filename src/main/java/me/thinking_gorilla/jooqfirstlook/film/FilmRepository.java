@@ -127,4 +127,32 @@ public class FilmRepository {
             .and(FILM.TITLE.like("%" + filmTitle + "%"))
             .fetchInto(Film.class);
     }
+
+    public List<FilmWithActor> findFilmWithActorsImplicitPathJoin(Pageable pageable) {
+        return dslContext.select(
+                FILM,
+                FILM.filmActor(),
+                FILM.filmActor().actor()
+            )
+            .from(FILM)
+            .join(FILM.filmActor())
+            .join(FILM.filmActor().actor())
+            .limit(pageable.getPageSize())
+            .offset(pageable.getOffset())
+            .fetchInto(FilmWithActor.class);
+    }
+
+    public List<FilmWithActor> findFilmWithActorsExplicitPathJoin(Pageable pageable) {
+        return dslContext.select(
+                FILM,
+                FILM.filmActor(),
+                FILM.filmActor().actor()
+            )
+            .from(FILM)
+            .join(FILM.filmActor())
+            .join(FILM.filmActor().actor())
+            .limit(pageable.getPageSize())
+            .offset(pageable.getOffset())
+            .fetchInto(FilmWithActor.class);
+    }
 }
