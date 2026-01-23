@@ -33,6 +33,8 @@ sourceSets {
 dependencies {
     implementation "org.jooq:jooq:${jooqVersion}"
 
+    // 격리된 테스트 컨테이너 환경에서 데이터베이스 스키마를 기반으로 jOOQ 코드 자동 생성
+    // 이를 통해 개발 환경이나 다른 개발자에게 영향을 미치지 않으면서 정확한 스키마 동기화 가능
     jooqCodegen project(':jooq-custom')
     jooqCodegen "org.jooq:jooq:${jooqVersion}"
     jooqCodegen "org.jooq:jooq-meta:${jooqVersion}"
