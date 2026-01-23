@@ -8,7 +8,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.3'
     id 'io.spring.dependency-management' version '1.1.4'
-    id 'nu.studer.jooq' version '9.0'
+    id 'dev.monosoul.jooq-docker' version '6.0.14'
 }
 
 group = 'me.thinking_gorilla'
@@ -33,9 +33,13 @@ sourceSets {
 dependencies {
     implementation "org.jooq:jooq:${jooqVersion}"
 
-    jooqGenerator project(':jooq-custom')
-    jooqGenerator "org.jooq:jooq:${jooqVersion}"
-    jooqGenerator "org.jooq:jooq-meta:${jooqVersion}"
+    jooqCodegen project(':jooq-custom')
+    jooqCodegen "org.jooq:jooq:${jooqVersion}"
+    jooqCodegen "org.jooq:jooq-meta:${jooqVersion}"
+    jooqCodegen "org.jooq:jooq-codegen:${jooqVersion}"
+
+    jooqCodegen 'org.flywaydb:flyway-core:10.8.1'
+    jooqCodegen 'org.flywaydb:flyway-mysql:10.8.1'
 
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.data:spring-data-commons'
@@ -56,89 +60,63 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-String dbUser = System.properties['db-user'] ?: 'root'
-String dbPasswd = System.properties['db-passwd'] ?: 'passwd'
+import org.jooq.meta.jaxb.*
 
 jooq {
     version = "${jooqVersion}"
-    configurations {
-        sakilaDB {
-            generationTool {
-                jdbc {
-                    driver = 'com.mysql.cj.jdbc.Driver'
-                    url = 'jdbc:mysql://localhost:3306'
-                    user = "${dbUser}"
-                    password = "${dbPasswd}"
-                }
-                generator {
-                    name = 'org.jooq.codegen.DefaultGenerator'
-                    database {
-                        name = 'org.jooq.meta.mysql.MySQLDatabase'
-                        // jOOQ에서 제공하는 unsinged type 사용여부
-                        unsignedTypes = true
-                        schemata {
-                            schema {
-                                inputSchema = 'sakila'
-                            }
-                        }
-                        forcedTypes {
-                            forcedType {
-                                includeTypes = 'int unsigned'
-                                userType = 'java.lang.Long'
-                            }
-                            forcedType {
-                                includeTypes = 'tinyint unsigned'
-                                userType = 'java.lang.Integer'
-                            }
-                            forcedType {
-                                includeTypes = 'smallint unsigned'
-                                userType = 'java.lang.Integer'
-                            }
-                        }
-                    }
-                    generate {
-                        // DSL 생성 시 일부 편의 기능이 완성된 Dao 자동생성
-                        daos = true
-                        // DB 테이블에 대응되는 ActiveRecord 자동생성
-                        records = true
-                        // DB 테이블에 대응되는 pojo 자동생성
-                        // pojos = true
-                        immutablePojos = false
-                        // pojo나 record 생성 시 return 값이 void 대신 객체 자체를 반환
-                        fluentSetters = true
-                        // java.sql.[Date|Time|Timestamp] 대신 java.time[LocalDate|LocalTime|LocalDateTime] 반환
-                        javaTimeTypes = true
-                        deprecated = false
-                        // 특정 데이터 타입을 DSL에서 강제로 다른 타입으로 지정 (e.g. INET, JSON → varchar)
-                        // forceTypes = true
-
-                        // jOOQ로 JPA 어노테이션이 붙은 모델을 생성함
-                        // jpaAnnotations = true
-                        // jpaVersion = 2.2
-
-                        //  javax.validation(JSR-380) 어노테이션이 붙은 모델을 생성함
-                        // validationAnnotations = true
-
-                        // Spring DATA Porject에 맞춰 모델을 생성함
-                        // springAnnotations = true
-                        // springDao = true
-                    }
-                    target {
-                        directory = 'src/generated'
-                    }
-
-                    // 왜 따로 서브모듈로 분리해야할까?
-                    strategy.name = 'jooq.custom.generator.JPrefixGeneratorStrategy'
-                }
-            }
+    withContainer {
+        image {
+            name = "mysql:8.0.29"
+            envVars = [
+                MYSQL_ROOT_PASSWORD: "passwd",
+                MYSQL_DATABASE     : "sakila"
+            ]
         }
-    }
 
-    sourceSets {
-        main {
-            java {
-                srcDirs = ['src/main/java', 'src/generated']
+        db {
+            username = "root"
+            password = "passwd"
+            name = "sakila"
+            port = 3306
+            jdbc {
+                schema = "jdbc:mysql"
+                driverClassName = "com.mysql.cj.jdbc.Driver"
             }
         }
     }
 }
+
+// https://www.jooq.org/doc/latest/manual/code-generation/codegen-configuration/
+tasks {
+    generateJooqClasses {
+        schemas.set(["sakila"])
+        outputDirectory.set(project.layout.projectDirectory.dir("src/generated"))
+        includeFlywayTable.set(false)
+
+        usingJavaConfig {
+            generate = new Generate()
+                .withJavaTimeTypes(true)
+                .withDeprecated(false)
+                .withDaos(true)
+                .withFluentSetters(true)
+                .withRecords(true)
+
+            withStrategy(
+                new Strategy().withName("jooq.custom.generator.JPrefixGeneratorStrategy")
+            )
+
+            database.withForcedTypes(
+                new ForcedType()
+                    .withUserType("java.lang.Long")
+                    .withTypes("int unsigned"),
+                new ForcedType()
+                    .withUserType("java.lang.Integer")
+                    .withTypes("tinyint unsigned"),
+                new ForcedType()
+                    .withUserType("java.lang.Integer")
+                    .withTypes("smallint unsigned")
+            )
+        }
+    }
+}
+
